@@ -28,12 +28,16 @@
 
 #include "app.h"
 #include "config_store.h"
+#include "identity.h"
 #include "wifi_mgr.h"
 
 #include "muse_link.h"
 #include "muse_settings.h"
 #include "muse_state.h"
 #include "muse_wifi.h"
+#if CONFIG_MUSE_REALTIME_VOICE
+#include "muse_voice_call.h"
+#endif
 
 // The session task's stack is in PSRAM, where reading flash would crash, so
 // what it asks for comes from here rather than NVS.
@@ -86,13 +90,21 @@ size_t muse_settings_hatch_token_len(void) {
     return 0;
 }
 
-// Replies are always spoken: there's no screen to show them on.
+// No screen to show replies on: anything played goes to the speaker.
 bool muse_settings_speaker_on(void) {
     return true;
 }
 
 // No screen either, so reply text is never shown; Muse's default page.
-void muse_state_page(int *cols, int *lines) {
+void muse_state_page(bool cjk, int *cols, int *lines) {
+    (void)cjk;
     *cols = 16;
     *lines = 2;
 }
+
+#if CONFIG_MUSE_REALTIME_VOICE
+// The call names Link's node as its device (a RAM string set at boot).
+const char *muse_voice_call_device_id(void) {
+    return identity_node_id();
+}
+#endif
